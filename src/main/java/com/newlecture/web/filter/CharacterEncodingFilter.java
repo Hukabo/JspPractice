@@ -9,7 +9,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
 
-@WebFilter("/*")
+@WebFilter("*")
 public class CharacterEncodingFilter implements Filter {
 
 	@Override
@@ -21,5 +21,4 @@ public class CharacterEncodingFilter implements Filter {
 		chain.doFilter(request, response);
 		System.out.println("after Filter!");
 	}
-
 }

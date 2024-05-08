@@ -1,10 +1,13 @@
 package com.newlecture.web;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,23 +17,52 @@ public class Add extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+
+		Cookie[] cookies = request.getCookies();
 		
-		response.setCharacterEncoding("UTF-8");
-		response.setContentType("text/html; charset=UTF-8");
+		String value = request.getParameter("value");
+		String op = request.getParameter("operator");
+		String dot = request.getParameter("dot");
 		
-		PrintWriter out = response.getWriter();
+		String exp = "";
+		 if(cookies != null)
+			 for(Cookie c : cookies) {
+				 if(c.getName().equals("exp")) {
+					 exp = c.getValue();
+					  break;
+				 }
+			 }
+		 
+		 if(op != null && op.equals("=")) {
+			 
+			 ScriptEngine engine = new ScriptEngineManager().getEngineByName("graal.js");
+			 
+			 try {
+				exp = String.valueOf(engine.eval(exp));
+			} catch (ScriptException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		 }
+		 
+		 else if(op != null && op.equals("C")) {
+			 exp = "0";
+		 }
+		 
+		 else {
+			 exp += value == null ? "" : value;
+			 exp += op == null ? "" : op;
+			 exp += dot == null ? "" : dot;
+		 }
+		 
 		
-		String x = request.getParameter("x");
-		String y = request.getParameter("y");
+		 
 		
-		if (x == null || x.equals("") || y == null || y.equals("")) {
-			out.println("똑바로 입력해라잉");
-		} else {
-			int x_ = Integer.parseInt(x);
-			int y_ = Integer.parseInt(y);
-			int sum = x_+y_;
-			out.println("결과는 : " + sum);
-		}
+		Cookie expCookie = new Cookie("exp", exp);
+		if(op != null && op.equals("C"))
+			expCookie.setMaxAge(0); 
 		
+		response.addCookie(expCookie);
+		response.sendRedirect("/calcpage");
 	}
 }

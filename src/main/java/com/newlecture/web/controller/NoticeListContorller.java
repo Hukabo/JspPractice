@@ -1,13 +1,6 @@
 package com.newlecture.web.controller;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -17,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.newlecture.web.entity.Notice;
+import com.newlecture.web.service.NoticeService;
 
 @WebServlet("/html/notice/list")
 public class NoticeListContorller extends HttpServlet {
@@ -24,47 +18,34 @@ public class NoticeListContorller extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		String dbDriver = "org.postgresql.Driver";
-		String dbUrl = "jdbc:postgresql://localhost:5432/jdbc";
-		String dbUser = "hukabo";
-		String dbPassword = "hukabo";
-		String sql = "SELECT * FROM notice";
+		String field = "title";
+		String query = "";
+		int page = 1;
 		
-		List<Notice> list = new ArrayList<>();
+		String field_ = request.getParameter("f");
+		String query_ = request.getParameter("q");
+		String page_ = request.getParameter("p");
 		
-		try {
-			
-			Class.forName(dbDriver);
-			Connection con = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-			Statement st = con.createStatement();
-			ResultSet rs = st.executeQuery(sql);
-			
-			
-			
-			while(rs.next()) {
-				int id = rs.getInt("id");
-				String title = rs.getString("title");
-				String writerId = rs.getString("writer_id");
-				Date regdate = rs.getDate("regDate");
-				int hit = rs.getInt("hit");
-				String files = rs.getString("files");
-				String content = rs.getString("content");
-				
-				Notice notice = new Notice(id, title, writerId, regdate, hit,files,content);
-				list.add(notice);
-			}
-			
-		    rs.close();
-		    st.close();
-		    con.close();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
+		if(field_ != null && !field_.equals("")) {
+			field = field_;
 		}
 		
+		if(query_ != null && !query_.equals("")) {
+			query = query_;
+		}
+		
+		if(page_ != null && !page_.equals("")) {
+			page = Integer.parseInt(page_);
+		}
+		
+		NoticeService service = new NoticeService();
+		List<Notice> list = service.getNoticeList(field, query, page);
+		int count = service.getNoticeCount(field, query);
+		
 		request.setAttribute("list",list);
+		request.setAttribute("count", count);
 		 
-		request.getRequestDispatcher("/WEB-INF/view/notice/list.jsp").forward(request, response);
+		request.getRequestDispatcher("/WEB-INF/view/notice/list.jsp")
+		.forward(request, response);
 	}
   }
